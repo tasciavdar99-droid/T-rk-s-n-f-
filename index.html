@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sınıf Listem</title>
 <style>
 body {
@@ -12,7 +12,7 @@ body {
   padding: 20px;
   color: #24304a;
 }
-.container {
+.kutu {
   max-width: 500px;
   margin: auto;
   background: white;
@@ -21,81 +21,61 @@ body {
   box-shadow: 0 4px 15px #ccd3e5;
 }
 h1 { text-align: center; color: #4255a4; }
-.subtitle { text-align: center; color: #65708a; }
 input, button {
   box-sizing: border-box;
   width: 100%;
   padding: 12px;
   margin: 6px 0;
-  border-radius: 9px;
+  border-radius: 8px;
+  border: 1px solid #ccd3e5;
   font-size: 16px;
 }
-input { border: 1px solid #ccd3e5; }
 button {
-  border: none;
-  background: #4255a4;
+  background: #5969d9;
   color: white;
-  cursor: pointer;
+  border: none;
 }
-#sayac { text-align: center; margin: 15px; }
 li {
-  background: #f0f4ff;
-  padding: 12px;
+  background: #f3f5ff;
   margin: 8px 0;
+  padding: 10px;
   border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+  overflow-wrap: anywhere;
 }
-li button { width: auto; margin: 0; background: #c43d52; }
-#liste { padding-left: 0; list-style: none; }
+li button { width: auto; float: right; padding: 6px 10px; }
+#sayac { text-align: center; color: #5969d9; }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="kutu">
   <h1>📚 Sınıf Listem</h1>
-  <p class="subtitle">16 kişilik öğrenci listesi</p>
 
-  <label for="sinif">Sınıf adı</label>
-  <input id="sinif" placeholder="Örn. 8/A">
+  <input id="sinif" placeholder="Sınıf adı (ör. 7-A)">
 
-  <label for="isim">Öğrenci adı soyadı</label>
-  <input id="isim" placeholder="Ad ve soyad">
-
+  <input id="isim" placeholder="Öğrenci adını yaz">
   <button onclick="ekle()">➕ Öğrenci Ekle</button>
 
-  <input id="ara" placeholder="🔎 Öğrenci ara..." oninput="goster()">
+  <input id="arama" placeholder="🔎 Öğrenci ismi ara..." oninput="goster()">
 
-  <p id="sayac">0 / 16 öğrenci</p>
+  <p id="sayac"></p>
   <ul id="liste"></ul>
 </div>
 
 <script>
-let ogrenciler = [];
+let ogrenciler = JSON.parse(localStorage.getItem("sinifOgrencileri") || "[]");
 
-try {
-  ogrenciler = JSON.parse(localStorage.getItem("sinifOgrencileri") || "[]");
-} catch (e) {
-  ogrenciler = [];
+function kaydet() {
+  localStorage.setItem("sinifOgrencileri", JSON.stringify(ogrenciler));
 }
 
-document.getElementById("sinif").value =
-  localStorage.getItem("sinifAdi") || "";
-
-document.getElementById("sinif").addEventListener("input", function() {
-  localStorage.setItem("sinifAdi", this.value);
-});
-
 function ekle() {
-  const kutu = document.getElementById("isim");
-  const isim = kutu.value.trim();
+  const alan = document.getElementById("isim");
+  const isim = alan.value.trim();
 
   if (!isim) {
-    alert("Lütfen öğrencinin adını ve soyadını yaz.");
+    alert("Lütfen öğrenci adını yaz.");
     return;
   }
-
   if (ogrenciler.length >= 16) {
     alert("Sınıf listesi 16 öğrenciyle sınırlıdır.");
     return;
@@ -103,44 +83,39 @@ function ekle() {
 
   ogrenciler.push(isim);
   kaydet();
-  kutu.value = "";
+  alan.value = "";
   goster();
 }
 
-function sil(index) {
-  if (confirm("Bu öğrenciyi listeden silmek istiyor musun?")) {
-    ogrenciler.splice(index, 1);
-    kaydet();
-    goster();
-  }
-}
-
-function kaydet() {
-  localStorage.setItem("sinifOgrencileri", JSON.stringify(ogrenciler));
-}
-
 function goster() {
-  const aranan = document.getElementById("ara").value.toLocaleLowerCase("tr");
+  const aranan = document.getElementById("arama").value
+    .trim().toLocaleLowerCase("tr-TR");
+
   const liste = document.getElementById("liste");
   liste.innerHTML = "";
 
-  ogrenciler.forEach((isim, index) => {
-    if (!isim.toLocaleLowerCase("tr").includes(aranan)) return;
+  const bulunanlar = ogrenciler
+    .map((isim, index) => ({isim, index}))
+    .filter(o => o.isim.toLocaleLowerCase("tr-TR").includes(aranan));
 
+  bulunanlar.forEach(o => {
     const li = document.createElement("li");
-    const yazi = document.createElement("span");
-    yazi.textContent = (index + 1) + ". " + isim;
+    li.textContent = o.isim + " ";
 
-    const buton = document.createElement("button");
-    buton.textContent = "Sil";
-    buton.onclick = () => sil(index);
+    const sil = document.createElement("button");
+    sil.textContent = "Sil";
+    sil.onclick = () => {
+      ogrenciler.splice(o.index, 1);
+      kaydet();
+      goster();
+    };
 
-    li.append(yazi, buton);
+    li.appendChild(sil);
     liste.appendChild(li);
   });
 
   document.getElementById("sayac").textContent =
-    ogrenciler.length + " / 16 öğrenci";
+    bulunanlar.length + " sonuç · " + ogrenciler.length + "/16 öğrenci";
 }
 
 goster();
