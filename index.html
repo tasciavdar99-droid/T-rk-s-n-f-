@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sınıf Listem</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f4ff;
+  margin: 0;
+  padding: 20px;
+  color: #24304a;
+}
+.container {
+  max-width: 500px;
+  margin: auto;
+  background: white;
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: 0 4px 15px #ccd3e5;
+}
+h1 { text-align: center; color: #4255a4; }
+.subtitle { text-align: center; color: #65708a; }
+input, button {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  margin: 6px 0;
+  border-radius: 9px;
+  font-size: 16px;
+}
+input { border: 1px solid #ccd3e5; }
+button {
+  border: none;
+  background: #4255a4;
+  color: white;
+  cursor: pointer;
+}
+#sayac { text-align: center; margin: 15px; }
+li {
+  background: #f0f4ff;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+li button { width: auto; margin: 0; background: #c43d52; }
+#liste { padding-left: 0; list-style: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📚 Sınıf Listem</h1>
+  <p class="subtitle">16 kişilik öğrenci listesi</p>
+
+  <label for="sinif">Sınıf adı</label>
+  <input id="sinif" placeholder="Örn. 8/A">
+
+  <label for="isim">Öğrenci adı soyadı</label>
+  <input id="isim" placeholder="Ad ve soyad">
+
+  <button onclick="ekle()">➕ Öğrenci Ekle</button>
+
+  <input id="ara" placeholder="🔎 Öğrenci ara..." oninput="goster()">
+
+  <p id="sayac">0 / 16 öğrenci</p>
+  <ul id="liste"></ul>
+</div>
+
+<script>
+let ogrenciler = [];
+
+try {
+  ogrenciler = JSON.parse(localStorage.getItem("sinifOgrencileri") || "[]");
+} catch (e) {
+  ogrenciler = [];
+}
+
+document.getElementById("sinif").value =
+  localStorage.getItem("sinifAdi") || "";
+
+document.getElementById("sinif").addEventListener("input", function() {
+  localStorage.setItem("sinifAdi", this.value);
+});
+
+function ekle() {
+  const kutu = document.getElementById("isim");
+  const isim = kutu.value.trim();
+
+  if (!isim) {
+    alert("Lütfen öğrencinin adını ve soyadını yaz.");
+    return;
+  }
+
+  if (ogrenciler.length >= 16) {
+    alert("Sınıf listesi 16 öğrenciyle sınırlıdır.");
+    return;
+  }
+
+  ogrenciler.push(isim);
+  kaydet();
+  kutu.value = "";
+  goster();
+}
+
+function sil(index) {
+  if (confirm("Bu öğrenciyi listeden silmek istiyor musun?")) {
+    ogrenciler.splice(index, 1);
+    kaydet();
+    goster();
+  }
+}
+
+function kaydet() {
+  localStorage.setItem("sinifOgrencileri", JSON.stringify(ogrenciler));
+}
+
+function goster() {
+  const aranan = document.getElementById("ara").value.toLocaleLowerCase("tr");
+  const liste = document.getElementById("liste");
+  liste.innerHTML = "";
+
+  ogrenciler.forEach((isim, index) => {
+    if (!isim.toLocaleLowerCase("tr").includes(aranan)) return;
+
+    const li = document.createElement("li");
+    const yazi = document.createElement("span");
+    yazi.textContent = (index + 1) + ". " + isim;
+
+    const buton = document.createElement("button");
+    buton.textContent = "Sil";
+    buton.onclick = () => sil(index);
+
+    li.append(yazi, buton);
+    liste.appendChild(li);
+  });
+
+  document.getElementById("sayac").textContent =
+    ogrenciler.length + " / 16 öğrenci";
+}
+
+goster();
+</script>
+</body>
+</html>
